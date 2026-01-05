@@ -28,12 +28,12 @@ if (!match) throw new Error('Invalid credentials');
 
 
 // create token (payload minimal)
-const payload = { id: user.id, username: user.username, role: user.role };
+const payload = { id: user.user_id, username: user.username, role: user.role };
 const token = jwt.sign(payload, process.env.JWT_SECRET, {
 expiresIn: process.env.JWT_EXPIRES_IN || '1h'
 });
 
 
-return { token, user: { id: user.id, username: user.username, email: user.email, role: user.role } };
+return { token, user: { id: user.user_id, username: user.username, email: user.email, role: user.role } };
 }
 };

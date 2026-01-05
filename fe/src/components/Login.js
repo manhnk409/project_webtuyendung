@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../services/api';
 
-export default function Login() {
+export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [status, setStatus] = useState(null);
 
@@ -11,8 +11,16 @@ export default function Login() {
     e.preventDefault();
     setStatus('loading');
     try {
-      const res = await login(form);
-      setStatus(JSON.stringify(res));
+      const res = await login({ username: form.username, password: form.password });
+      // expected res: { token, user }
+      if (res && res.token) {
+        // persist auth
+        const auth = { token: res.token, user: res.user };
+        localStorage.setItem('auth', JSON.stringify(auth));
+        onLogin && onLogin(auth);
+      } else {
+        setStatus(JSON.stringify(res));
+      }
     } catch (err) {
       setStatus('Error: ' + (err.message || err));
     }

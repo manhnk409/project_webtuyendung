@@ -1,0 +1,16 @@
+/* Basic layout for employer dashboard */
+.employer-dashboard{display:flex;min-height:70vh;font-family:Arial,Helvetica,sans-serif}
+.employer-sidebar{width:220px;border-right:1px solid #e6e6e6;padding:16px;background:#fafafa}
+.employer-sidebar h3{margin:0 0 12px}
+.employer-sidebar ul{list-style:none;padding:0;margin:0}
+.employer-sidebar li{padding:8px 6px;cursor:pointer;border-radius:4px}
+.employer-sidebar li:hover{background:#f0f0f0}
+.employer-sidebar li.active{background:#e8f4ff;color:#0366d6}
+.employer-sidebar .back-btn{margin-top:12px;padding:8px 10px}
+.employer-main{flex:1;padding:20px;background:#fff}
+.quick-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+.quick-stats .stat{background:#fff;border:1px solid #eee;padding:12px;text-align:center;border-radius:6px}
+.quick-stats .label{font-size:12px;color:#666;margin-top:6px}
+.chart-box{height:140px;border:1px dashed #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888}
+.card{background:#fff;border:1px solid #eee;padding:10px;border-radius:6px;margin-top:8px}
+.job-card{padding:12px;border:1px solid #eee;border-radius:6px;margin-bottom:8px}

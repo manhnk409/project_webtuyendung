@@ -1,0 +1,94 @@
+.candidate-dashboard {
+  display: flex;
+  min-height: 60vh;
+  font-family: Arial, sans-serif;
+}
+
+.candidate-sidebar {
+  width: 220px;
+  background: #f7f7f9;
+  border-right: 1px solid #e1e1e1;
+  padding: 1rem;
+}
+.candidate-sidebar h3 {
+  margin: 0 0 1rem 0;
+}
+.candidate-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.candidate-sidebar li {
+  padding: 0.6rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.candidate-sidebar li.active {
+  background: #e8f0ff;
+  font-weight: 600;
+}
+
+.candidate-main {
+  flex: 1;
+  padding: 1.2rem;
+}
+
+.overview h2 {
+  margin-top: 0;
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem 0;
+}
+.stat-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 0.8rem;
+  border-radius: 6px;
+  text-align: left;
+}
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  padding: 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+.job-list, .applied-list {
+  list-style: none;
+  padding: 0.4rem 0 0 0;
+  margin: 0;
+}
+.job-list li, .applied-list li {
+  padding: 0.45rem 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.profile-panel {
+  max-width: 720px;
+}
+.profile-root { }
+.profile-display { background:#fff; border:1px solid #e6e6e6; padding:12px; border-radius:6px }
+.profile-row { padding:6px 0; border-bottom: 1px solid #fafafa }
+.profile-edit { background:#fff; border:1px solid #e6e6e6; padding:12px; border-radius:6px; display:flex; flex-direction:column; gap:8px }
+.profile-edit input, .profile-edit textarea { padding:8px; border:1px solid #ddd; border-radius:4px; font-size:14px }
+.profile-edit textarea { min-height:80px }
+.profile-edit button, .profile-display button { padding:6px 10px; border-radius:4px; border:1px solid #bbb; background:#f5f5f5; cursor:pointer }
+
+
+@media (max-width: 700px) {
+  .candidate-dashboard { flex-direction: column; }
+  .candidate-sidebar { width: 100%; }
+}

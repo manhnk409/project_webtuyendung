@@ -17,10 +17,11 @@ res.status(400).json({ error: err.message });
 
 exports.login = async (req, res) => {
 try {
-const { username, password } = req.body;
+const { username, password} = req.body;
 if (!username || !password) return res.status(400).json({ message: 'username and password required' });
 
 
+// pass optional role to service for role validation
 const result = await authService.login({ username, password });
 res.json(result);
 } catch (err) {

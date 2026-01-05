@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth.route');
-const userRoutes = require('./routes/user.route');
+const Routes = require('./routes/routes');
+
 
 
 const app = express();
@@ -10,8 +10,8 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+// Mount all application routes under /api
+app.use('/api', Routes);
 
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'API running' }));

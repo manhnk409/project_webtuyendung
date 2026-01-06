@@ -2,11 +2,18 @@ import React, { useState } from 'react';
 import './employer.css';
 import EmployerHome from './EmployerHome';
 import Jobs from './Jobs';
+import Applicants from './Applicants';
 import CompanyProfile from './CompanyProfile';
 import Settings from './Settings';
 
-export default function DashboardLayout({ onBack }) {
-  const [panel, setPanel] = useState('overview');
+export default function DashboardLayout({ onBack, forceProfileEdit }) {
+  const [panel, setPanel] = useState(forceProfileEdit ? 'profile' : 'overview');
+
+  React.useEffect(() => {
+    if (forceProfileEdit) {
+      setPanel('profile');
+    }
+  }, [forceProfileEdit]);
 
   return (
     <div className="employer-dashboard">
@@ -25,7 +32,7 @@ export default function DashboardLayout({ onBack }) {
       <main className="employer-main">
         {panel === 'overview' && <EmployerHome />}
         {panel === 'jobs' && <Jobs />}
-        {panel === 'applicants' && <div style={{padding:20}}>Applicants list (placeholder)</div>}
+        {panel === 'applicants' && <Applicants />}
         {panel === 'profile' && <CompanyProfile />}
         {panel === 'settings' && <Settings />}
       </main>

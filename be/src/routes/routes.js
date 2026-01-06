@@ -64,11 +64,13 @@ router.post('/jobs/:id/apply', authenticate, authorizeRole(['candidate','admin']
 router.post('/applications', authenticate, authorizeRole(['candidate','admin']), applicationCtrl.createApplication);
 router.get('/applications/job/:job_id', authenticate, authorizeRole(['employer','admin']), applicationCtrl.getApplicationsByJobId);
 router.get('/applications/candidate/:candidate_id', authenticate, authorizeRole(['candidate','admin']), applicationCtrl.getApplicationsByCandidateId);
+router.get('/applications/me', authenticate, authorizeRole(['employer','admin']), applicationCtrl.getApplicationsForMyJobs);
 router.put('/applications/:application_id/status', authenticate, authorizeRole(['employer','admin']), applicationCtrl.updateApplicationStatus);
 router.delete('/applications/:application_id', authenticate, authorizeRole(['employer','candidate','admin']), applicationCtrl.deleteApplication);
 
 // admin-only: list users
 router.get('/', authenticate, authorizeRole(['admin']), userCtrl.getAllUsers);
+router.delete('/users/:id', authenticate, authorizeRole(['admin']), userCtrl.deleteUser);
 
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const Job = require('../models/job.model');
 const User = require('../models/user.model');
+const Employer = require('../models/employer.model');
 
 // Get all jobs (admin sees all, employer sees only their jobs)
 exports.getAllJobs = async (req, res) => {
@@ -16,7 +17,9 @@ exports.getAllJobs = async (req, res) => {
     if (userRole === 'employer') {
       // Employer sees only their own jobs
       // Need to get employer_id from users or employers table
-      const jobs = await Job.findByEmployerId(userId);
+      const emp = await Employer.findByUserId(userId);
+      if (!emp) return res.json([]);
+      const jobs = await Job.findByEmployerId(emp.user_id);
       return res.json(jobs);
     }
 
@@ -42,8 +45,11 @@ exports.getJobById = async (req, res) => {
       return res.json(job);
     }
 
-    if (userRole === 'employer' && job.employer_id === userId) {
-      return res.json(job);
+    if (userRole === 'employer') {
+      const emp = await Employer.findByUserId(userId);
+      if (emp && job.employer_id === emp.user_id) {
+        return res.json(job);
+      }
     }
 
     return res.status(403).json({ message: 'Forbidden: not your job' });
@@ -59,16 +65,31 @@ exports.createJob = async (req, res) => {
     const userId = req.user && req.user.id;
     const userRole = req.user && req.user.role;
 
+    console.log('[createJob] Request body:', req.body);
+    console.log('[createJob] User:', { userId, userRole });
+
     if (!title || !description) {
       return res.status(400).json({ message: 'title and description required' });
     }
 
     // For employer, employer_id = their user_id; for admin, can specify employer_id
-    let employer_id = userId;
+    let employer_id = null;
     if (userRole === 'admin' && req.body.employer_id) {
       employer_id = req.body.employer_id;
+      console.log('[createJob] Admin provided employer_id:', employer_id);
+    } else if (userRole === 'employer') {
+        const emp = await Employer.findByUserId(userId);
+        console.log('[createJob] Found employer:', emp);
+        if (emp) employer_id = emp.user_id;
+        console.log('[createJob] Resolved employer_id:', employer_id);
     }
 
+    if (!employer_id) {
+        console.error('[createJob] Failed to resolve employer_id');
+        return res.status(400).json({ message: 'employer_id could not be determined or is required' });
+    }
+
+    console.log('[createJob] Creating job with employer_id:', employer_id);
     const result = await Job.create({
       employer_id,
       title,
@@ -79,8 +100,10 @@ exports.createJob = async (req, res) => {
       status
     });
 
+    console.log('[createJob] Job created successfully, insertId:', result.insertId);
     res.status(201).json({ message: 'Job created', job_id: result.insertId });
   } catch (err) {
+    console.error('[createJob] Error:', err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -97,8 +120,11 @@ exports.updateJob = async (req, res) => {
     const job = await Job.findById(id);
     if (!job) return res.status(404).json({ message: 'Job not found' });
 
-    if (userRole !== 'admin' && job.employer_id !== userId) {
-      return res.status(403).json({ message: 'Forbidden: not your job' });
+    if (userRole !== 'admin') {
+      const emp = await Employer.findByUserId(userId);
+      if (!emp || job.employer_id !== emp.user_id) {
+        return res.status(403).json({ message: 'Forbidden: not your job' });
+      }
     }
 
     const updated = await Job.update(id, payload);
@@ -121,8 +147,11 @@ exports.deleteJob = async (req, res) => {
     const job = await Job.findById(id);
     if (!job) return res.status(404).json({ message: 'Job not found' });
 
-    if (userRole !== 'admin' && job.employer_id !== userId) {
-      return res.status(403).json({ message: 'Forbidden: not your job' });
+    if (userRole !== 'admin') {
+      const emp = await Employer.findByUserId(userId);
+      if (!emp || job.employer_id !== emp.user_id) {
+        return res.status(403).json({ message: 'Forbidden: not your job' });
+      }
     }
 
     const result = await Job.delete(id);
@@ -135,8 +164,21 @@ exports.deleteJob = async (req, res) => {
 // Get jobs by current employer
 exports.getJobsByEmployer = async (req, res) => {
   try {
-    const userId = req.user && req.user.id;
+    // Derive user id from token payload; some tokens use id, others user_id
+    let userId = req.user && (req.user.id || req.user.user_id || req.user.ID || req.user.userId || null);
     const userRole = req.user && req.user.role;
+
+    // If id is still missing but username exists, attempt a lookup
+    if (!userId && req.user && req.user.username) {
+      try {
+        const found = await User.findByUsername(req.user.username);
+        if (found) {
+          userId = found.id || found.user_id || found.ID || found.userId || null;
+        }
+      } catch (lookupErr) {
+        console.warn('[jobs/me] user lookup failed:', lookupErr.message);
+      }
+    }
 
     if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
 
@@ -150,9 +192,10 @@ exports.getJobsByEmployer = async (req, res) => {
       const jobs = await Job.getAll();
       return res.json(jobs);
     }
-
-    // For employer, get their own jobs
-    const jobs = await Job.findByEmployerId(userId);
+    if(userRole === 'employer') {
+      const jobs = await Job.findByEmployerId(userId);
+      return res.json(jobs);
+    }
     res.json(jobs);
   } catch (err) {
     res.status(500).json({ error: err.message });

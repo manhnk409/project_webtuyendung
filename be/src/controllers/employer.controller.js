@@ -24,11 +24,14 @@ exports.getEmployerById = async (req, res) => {
 
 exports.createEmployer = async (req, res) => {
   try {
-    const { employer_name, company_name, company_address, company_website, email, contact_number } = req.body;
-    if (!employer_name || !email) return res.status(400).json({ message: 'employer_name and email required' });
+    const { user_id, employer_name, company_name, company_address, company_website, email, contact_number } = req.body;
+    if (!employer_name || !company_name || !email) {
+      return res.status(400).json({ message: 'employer_name, company_name and email are required' });
+    }
 
-    const result = await Employer.create({ employer_name, company_name, company_address, company_website, email, contact_number });
-    res.status(201).json({ message: 'Employer created', result });
+    // user_id optional; if present we keep 1:1 with a user, otherwise DB auto-generates id
+    const employer = await Employer.create({ user_id, employer_name, company_name, company_address, company_website, email, contact_number });
+    res.status(201).json({ message: 'Employer created', employer });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -38,8 +41,9 @@ exports.updateEmployer = async (req, res) => {
   try {
     const { id } = req.params;
     const payload = req.body;
-    const result = await Employer.update(id, payload);
-    res.json({ message: 'Updated', result });
+    const employer = await Employer.update(id, payload);
+    if (!employer) return res.status(404).json({ message: 'Employer not found or not updated' });
+    res.json({ message: 'Updated', employer });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -100,13 +104,18 @@ exports.updateMe = async (req, res) => {
       console.warn('[employer.updateMe] unauthenticated: req.user=', req.user);
       return res.status(401).json({ message: 'Unauthenticated' });
     }
-    const emp = await Employer.findByUserId(userId);
-    if (!emp) return res.status(404).json({ message: 'Employer profile not found' });
 
-    const payload = req.body;
-    const updated = await Employer.update(emp.id, payload);
-    if (!updated) return res.status(400).json({ message: 'Update failed' });
-    res.json({ message: 'Updated', employer: updated });
+    const payload = { ...req.body };
+    if (payload.employer_email && !payload.email) payload.email = payload.employer_email;
+
+    // Upsert by authenticated user id; FE does not need to send user_id
+    const existing = await Employer.findByUserId(userId);
+    const employer = existing
+      ? await Employer.update(userId, payload)
+      : await Employer.create({ user_id: userId, ...payload });
+
+    if (!employer) return res.status(400).json({ message: 'Update failed' });
+    res.json({ message: existing ? 'Updated' : 'Created', employer });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -139,7 +148,7 @@ exports.deleteMe = async (req, res) => {
     if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
     const emp = await Employer.findByUserId(userId);
     if (!emp) return res.status(404).json({ message: 'Employer profile not found' });
-    const result = await Employer.delete(emp.id);
+    const result = await Employer.delete(userId);
     res.json({ message: 'Employer profile deleted', result });
   } catch (err) {
     res.status(400).json({ error: err.message });

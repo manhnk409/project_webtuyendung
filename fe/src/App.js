@@ -6,6 +6,7 @@ import Register from './components/Register';
 import DashboardLayout from './employer/DashboardLayout';
 import CandidateDashboard from './candidate/CandidateDashboard';
 import AdminDashboard from './admin/AdminDashboard';
+import { checkProfileCompleteness } from './services/api';
 
 function Home() {
   return (
@@ -19,6 +20,7 @@ function Home() {
 function App() {
   const [route, setRoute] = useState('login');
   const [auth, setAuth] = useState(null);
+  const [forceProfileEdit, setForceProfileEdit] = useState(false);
 
   React.useEffect(() => {
     try {
@@ -35,12 +37,32 @@ function App() {
     }
   }, []);
 
-  const handleLogin = (authObj) => {
+  const handleLogin = async (authObj) => {
     setAuth(authObj);
-    if (authObj && authObj.user && authObj.user.role === 'employer') setRoute('employer');
-    else if (authObj && authObj.user && authObj.user.role === 'candidate') setRoute('candidate');
-    else if (authObj && authObj.user && authObj.user.role === 'admin') setRoute('admin');
-    else setRoute('login');
+    
+    // Check profile completeness for employer and candidate
+    if (authObj && authObj.user) {
+      const role = authObj.user.role;
+      
+      if (role === 'employer' || role === 'candidate') {
+        const check = await checkProfileCompleteness(role);
+        
+        if (!check.complete) {
+          // Show alert and force redirect to profile
+          alert(check.message || 'Please complete your profile before proceeding.');
+          setForceProfileEdit(true);
+        } else {
+          setForceProfileEdit(false);
+        }
+      }
+      
+      if (role === 'employer') setRoute('employer');
+      else if (role === 'candidate') setRoute('candidate');
+      else if (role === 'admin') setRoute('admin');
+      else setRoute('login');
+    } else {
+      setRoute('login');
+    }
   };
 
   const handleLogout = () => {
@@ -55,8 +77,8 @@ function App() {
       <main>
         {route === 'login' && <Login onLogin={handleLogin} />}
         {route === 'register' && <Register />}
-        {route === 'employer' && <DashboardLayout onBack={() => setRoute('login')} />}
-        {route === 'candidate' && <CandidateDashboard />}
+        {route === 'employer' && <DashboardLayout onBack={() => setRoute('login')} forceProfileEdit={forceProfileEdit} />}
+        {route === 'candidate' && <CandidateDashboard forceProfileEdit={forceProfileEdit} />}
         {route === 'admin' && <AdminDashboard />}
       </main>
     </div>

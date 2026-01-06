@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllEmployers, getAllCandidates, getMyJobs, getAllUsers } from '../services/api';
+import { getAllEmployers, getAllCandidates, getMyJobs, getAllUsers, deleteUser } from '../services/api';
 import './admin.css';
 
 function StatCard({ icon, count, label, color }) {
@@ -47,6 +47,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (user) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete user "${user.username}" (ID: ${user.user_id})?\n\nThis action cannot be undone and will also delete all related data (employer/candidate profile, jobs, applications, etc.).`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      setLoading(true);
+      await deleteUser(user.user_id);
+      alert('User deleted successfully');
+      await loadData();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user: ' + (err.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Mock data for demonstration
   const jobList = [
     { title: 'Software Engineer', employer: 'Tech Corp', location: 'New York', status: 'open' },
@@ -70,7 +90,6 @@ export default function AdminDashboard() {
           <li className={panel === 'employers' ? 'active' : ''} onClick={() => setPanel('employers')}>Employers</li>
           <li className={panel === 'candidates' ? 'active' : ''} onClick={() => setPanel('candidates')}>Candidates</li>
           <li className={panel === 'jobs' ? 'active' : ''} onClick={() => setPanel('jobs')}>Jobs</li>
-          <li className={panel === 'applications' ? 'active' : ''} onClick={() => setPanel('applications')}>Applications</li>
         </ul>
       </aside>
 
@@ -158,6 +177,7 @@ export default function AdminDashboard() {
                     <th>Email</th>
                     <th>Role</th>
                     <th>Created At</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -172,6 +192,23 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <button 
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={loading}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 4,
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            opacity: loading ? 0.6 : 1
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

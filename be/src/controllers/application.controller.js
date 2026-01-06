@@ -1,4 +1,6 @@
 const Application = require('../models/application.model');
+const Employer = require('../models/employer.model');
+const User = require('../models/user.model');
 
 // Create a new application
 exports.createApplication = async (req, res) => {
@@ -52,6 +54,56 @@ exports.getApplicationsByJobId = async (req, res) => {
     });
   } catch (error) {
     console.error('Get applications by job error:', error);
+    res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+};
+
+// Get applications for all jobs owned by current employer (or specified employer when admin)
+exports.getApplicationsForMyJobs = async (req, res) => {
+  try {
+    const userRole = req.user && req.user.role;
+    let userId = req.user && (req.user.id || req.user.user_id || req.user.ID || req.user.userId || null);
+
+    // Allow admin to pass ?employer_id to inspect a specific employer's jobs
+    let employerId = null;
+    if (userRole === 'admin' && req.query && req.query.employer_id) {
+      employerId = req.query.employer_id;
+    }
+
+    // Resolve employer id for the current employer user
+    if (!employerId) {
+      if (!userId && req.user && req.user.username) {
+        try {
+          const found = await User.findByUsername(req.user.username);
+          if (found) userId = found.id || found.user_id || found.ID || found.userId || null;
+        } catch (lookupErr) {
+          console.warn('[applications/me] user lookup failed:', lookupErr.message);
+        }
+      }
+
+      if (!userId) return res.status(401).json({ message: 'Unauthenticated' });
+
+      const emp = await Employer.findByUserId(userId);
+      console.log('[applications/me] Found employer:', emp);
+      
+      if (!emp) return res.status(404).json({ message: 'Employer profile not found' });
+      
+      // Use employer's user_id as the employer_id (this is what jobs.employer_id references)
+      employerId = emp.user_id || emp.id || emp.employer_id || null;
+      
+      console.log('[applications/me] Resolved employerId:', employerId);
+      
+      if (!employerId) {
+        console.error('[applications/me] employer record missing id:', emp);
+        return res.status(500).json({ message: 'Employer profile has no valid id' });
+      }
+    }
+
+    console.log('[applications/me] Querying with employerId:', employerId);
+    const applications = await Application.findByEmployerId(employerId);
+    res.json({ applications, count: applications.length });
+  } catch (error) {
+    console.error('Get applications by employer error:', error);
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
 };

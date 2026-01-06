@@ -44,6 +44,19 @@ const Application = {
     return rows;
   },
 
+  findByEmployerId: async (employer_id) => {
+    const [rows] = await db.execute(
+      `SELECT a.*, j.title AS job_title, j.job_id, c.full_name, c.phone_number, c.resume_url
+       FROM applications a
+       JOIN jobs j ON a.job_id = j.job_id
+       JOIN candidates c ON a.candidate_id = c.user_id
+       WHERE j.employer_id = ?
+       ORDER BY a.applied_at DESC`,
+      [employer_id]
+    );
+    return rows;
+  },
+
   updateStatus: async (application_id, status) => {
     const [result] = await db.execute(
       'UPDATE applications SET status = ? WHERE application_id = ?',

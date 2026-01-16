@@ -211,3 +211,14 @@ exports.getOpenJobs = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Search jobs with filters
+exports.searchJobs = async (req, res) => {
+  try {
+    const { keyword = '', location = '', salaryMin = null, salaryMax = null } = req.query;
+    const jobs = await Job.searchJobs({ keyword, location, salaryMin, salaryMax });
+    res.json(jobs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

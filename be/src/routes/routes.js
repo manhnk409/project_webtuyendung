@@ -49,6 +49,7 @@ router.delete('/candidates/:id', authenticate, authorizeRole(['admin']), candida
 //jobs routes (employers and admin)
 router.get('/jobs/me', authenticate, authorizeRole(['employer','admin']), jobCtrl.getJobsByEmployer);
 router.get('/jobs/open', authenticate, authorizeRole(['candidate','admin']), jobCtrl.getOpenJobs);
+router.get('/jobs/search', authenticate, authorizeRole(['candidate','admin']), jobCtrl.searchJobs);
 router.get('/jobs', authenticate, authorizeRole(['employer','admin']), jobCtrl.getAllJobs);
 router.get('/jobs/:id', authenticate, authorizeRole(['employer','admin']), jobCtrl.getJobById);
 router.post('/jobs', authenticate, authorizeRole(['employer','admin']), jobCtrl.createJob);

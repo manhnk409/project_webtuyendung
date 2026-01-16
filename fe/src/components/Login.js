@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { login } from '../services/api';
+import './Login.css';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onNavigate }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setStatus('loading');
+    setIsLoading(true);
+    setStatus(null);
     try {
       const res = await login({ username: form.username, password: form.password });
       // expected res: { token, user }
@@ -19,22 +22,67 @@ export default function Login({ onLogin }) {
         localStorage.setItem('auth', JSON.stringify(auth));
         onLogin && onLogin(auth);
       } else {
-        setStatus(JSON.stringify(res));
+        setStatus({ type: 'error', message: 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin.' });
       }
     } catch (err) {
-      setStatus('Error: ' + (err.message || err));
+      setStatus({ type: 'error', message: 'Lỗi: ' + (err.message || err) });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{padding: '1rem'}}>
-      <h2>Login</h2>
-      <form onSubmit={onSubmit} style={{display: 'grid', gap: '0.5rem', maxWidth: 320}}>
-        <input name="username" placeholder="Username" value={form.username} onChange={onChange} />
-        <input name="password" type="password" placeholder="Password" value={form.password} onChange={onChange} />
-        <button type="submit">Login</button>
-      </form>
-      {status && <pre style={{marginTop: '1rem'}}>{status}</pre>}
+    <div className="login-container">
+      <div className="login-box">
+        <div className="login-header">
+          <h1>Web Tuyển Dụng</h1>
+          <p>Đăng nhập vào hệ thống</p>
+        </div>
+
+        <form onSubmit={onSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="username">Tên đăng nhập</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Nhập tên đăng nhập"
+              value={form.username}
+              onChange={onChange}
+              disabled={isLoading}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Mật khẩu</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Nhập mật khẩu"
+              value={form.password}
+              onChange={onChange}
+              disabled={isLoading}
+              required
+            />
+          </div>
+
+          {status && (
+            <div className={`alert alert-${status.type}`}>
+              {status.message}
+            </div>
+          )}
+
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          </button>
+        </form>
+
+        <div className="login-footer">
+          <p>Chưa có tài khoản? <button type="button" className="link-button" onClick={() => onNavigate && onNavigate('register')}>Đăng ký tại đây</button></p>
+        </div>
+      </div>
     </div>
   );
 }

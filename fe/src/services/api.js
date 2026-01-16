@@ -79,6 +79,16 @@ export async function getOpenJobs() {
   return request('/api/jobs/open');
 }
 
+export async function searchJobs(filters = {}) {
+  const { keyword = '', location = '', salaryMin = null, salaryMax = null } = filters;
+  let url = '/api/jobs/search?';
+  if (keyword) url += `keyword=${encodeURIComponent(keyword)}&`;
+  if (location) url += `location=${encodeURIComponent(location)}&`;
+  if (salaryMin) url += `salaryMin=${encodeURIComponent(salaryMin)}&`;
+  if (salaryMax) url += `salaryMax=${encodeURIComponent(salaryMax)}&`;
+  return request(url);
+}
+
 export async function getApplicationsByJob(jobId) {
   return request(`/api/applications/job/${jobId}`);
 }

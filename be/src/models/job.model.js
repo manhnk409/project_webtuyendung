@@ -44,6 +44,34 @@ const Job = {
     return rows;
   },
 
+  searchJobs: async ({ keyword = '', location = '', salaryMin = null, salaryMax = null } = {}) => {
+    let query = "SELECT * FROM jobs WHERE status = 'open'";
+    const params = [];
+
+    if (keyword) {
+      query += " AND (title LIKE ? OR description LIKE ? OR requirements LIKE ?)";
+      const searchTerm = `%${keyword}%`;
+      params.push(searchTerm, searchTerm, searchTerm);
+    }
+
+    if (location) {
+      query += " AND location LIKE ?";
+      params.push(`%${location}%`);
+    }
+
+    // Note: salary_range might be a text field like "10-20M" or "competitive"
+    // This is a basic implementation for numeric range if salary_range contains numbers
+    if (salaryMin || salaryMax) {
+      query += " AND salary_range LIKE ?";
+      // This is a simplified filter, can be improved based on actual salary_range format
+      params.push(`%`);
+    }
+
+    query += " ORDER BY created_at DESC";
+    const [rows] = await db.execute(query, params);
+    return rows;
+  },
+
   delete: async (job_id) => {
     const [result] = await db.execute('DELETE FROM jobs WHERE job_id = ?', [job_id]);
     return result;

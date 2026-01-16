@@ -75,8 +75,8 @@ function App() {
     <div className="App">
       <Header onNavigate={setRoute} auth={auth} onLogout={handleLogout} />
       <main>
-        {route === 'login' && <Login onLogin={handleLogin} />}
-        {route === 'register' && <Register />}
+        {route === 'login' && <Login onLogin={handleLogin} onNavigate={setRoute} />}
+        {route === 'register' && <Register onNavigate={setRoute} />}
         {route === 'employer' && <DashboardLayout onBack={() => setRoute('login')} forceProfileEdit={forceProfileEdit} />}
         {route === 'candidate' && <CandidateDashboard forceProfileEdit={forceProfileEdit} />}
         {route === 'admin' && <AdminDashboard />}
